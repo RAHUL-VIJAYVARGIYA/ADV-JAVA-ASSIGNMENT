@@ -4,8 +4,8 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
 public class studentregistrationform extends JFrame {
-    private JLabel lblName, lblEmail, lblPhone, lblGender, lblBranch, lblSemester, lblAddress;
-    private JTextField txtName, txtEmail, txtPhone, txtAddress;
+    private JLabel lblName, lblPhone, lblGender, lblBranch, lblSemester, lblAddress, lblRollNo;
+    private JTextField txtName, txtPhone, txtAddress, txtRollNo;
     private JRadioButton rbMale, rbFemale, rbOther;
     private ButtonGroup genderGroup;
     private JComboBox<String> cbBranch, cbSemester;
@@ -14,48 +14,42 @@ public class studentregistrationform extends JFrame {
     private JScrollPane scrollPane;
 
     public studentregistrationform() {
-        // Frame Setup
-        setTitle("Student Registration Form");
+        setTitle("College Student Registration");
         setSize(600, 700);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
         setResizable(false);
 
-        // Panel Setup
         JPanel panel = new JPanel();
         panel.setLayout(null);
         panel.setBackground(new Color(240, 248, 255));
 
-        // Title Label
         JLabel title = new JLabel("Student Registration Form");
         title.setFont(new Font("Arial", Font.BOLD, 20));
         title.setBounds(150, 15, 300, 30);
         panel.add(title);
 
-        // Name Label and TextField
-        lblName = new JLabel("Name:");
+        lblRollNo = new JLabel("Roll Number:");
+        lblRollNo.setFont(new Font("Arial", Font.PLAIN, 12));
+        lblRollNo.setBounds(50, 60, 100, 25);
+        panel.add(lblRollNo);
+
+        txtRollNo = new JTextField();
+        txtRollNo.setBounds(150, 60, 200, 25);
+        txtRollNo.setFont(new Font("Arial", Font.PLAIN, 12));
+        panel.add(txtRollNo);
+
+        lblName = new JLabel("Full Name:");
         lblName.setFont(new Font("Arial", Font.PLAIN, 12));
-        lblName.setBounds(50, 60, 100, 25);
+        lblName.setBounds(50, 100, 100, 25);
         panel.add(lblName);
 
         txtName = new JTextField();
-        txtName.setBounds(150, 60, 200, 25);
+        txtName.setBounds(150, 100, 200, 25);
         txtName.setFont(new Font("Arial", Font.PLAIN, 12));
         panel.add(txtName);
 
-        // Email Label and TextField
-        lblEmail = new JLabel("Email:");
-        lblEmail.setFont(new Font("Arial", Font.PLAIN, 12));
-        lblEmail.setBounds(50, 100, 100, 25);
-        panel.add(lblEmail);
-
-        txtEmail = new JTextField();
-        txtEmail.setBounds(150, 100, 200, 25);
-        txtEmail.setFont(new Font("Arial", Font.PLAIN, 12));
-        panel.add(txtEmail);
-
-        // Phone Label and TextField
-        lblPhone = new JLabel("Phone:");
+        lblPhone = new JLabel("Phone Number:");
         lblPhone.setFont(new Font("Arial", Font.PLAIN, 12));
         lblPhone.setBounds(50, 140, 100, 25);
         panel.add(lblPhone);
@@ -65,7 +59,6 @@ public class studentregistrationform extends JFrame {
         txtPhone.setFont(new Font("Arial", Font.PLAIN, 12));
         panel.add(txtPhone);
 
-        // Gender Label and Radio Buttons
         lblGender = new JLabel("Gender:");
         lblGender.setFont(new Font("Arial", Font.PLAIN, 12));
         lblGender.setBounds(50, 180, 100, 25);
@@ -94,7 +87,6 @@ public class studentregistrationform extends JFrame {
         genderGroup.add(rbOther);
         panel.add(rbOther);
 
-        // Branch Label and ComboBox
         lblBranch = new JLabel("Branch:");
         lblBranch.setFont(new Font("Arial", Font.PLAIN, 12));
         lblBranch.setBounds(50, 220, 100, 25);
@@ -106,7 +98,6 @@ public class studentregistrationform extends JFrame {
         cbBranch.setFont(new Font("Arial", Font.PLAIN, 12));
         panel.add(cbBranch);
 
-        // Semester Label and ComboBox
         lblSemester = new JLabel("Semester:");
         lblSemester.setFont(new Font("Arial", Font.PLAIN, 12));
         lblSemester.setBounds(50, 260, 100, 25);
@@ -118,7 +109,6 @@ public class studentregistrationform extends JFrame {
         cbSemester.setFont(new Font("Arial", Font.PLAIN, 12));
         panel.add(cbSemester);
 
-        // Address Label and TextField
         lblAddress = new JLabel("Address:");
         lblAddress.setFont(new Font("Arial", Font.PLAIN, 12));
         lblAddress.setBounds(50, 300, 100, 25);
@@ -129,7 +119,6 @@ public class studentregistrationform extends JFrame {
         txtAddress.setFont(new Font("Arial", Font.PLAIN, 12));
         panel.add(txtAddress);
 
-        // Submit Button
         btnSubmit = new JButton("Submit");
         btnSubmit.setBounds(150, 370, 90, 30);
         btnSubmit.setFont(new Font("Arial", Font.BOLD, 12));
@@ -143,7 +132,6 @@ public class studentregistrationform extends JFrame {
         });
         panel.add(btnSubmit);
 
-        // Reset Button
         btnReset = new JButton("Reset");
         btnReset.setBounds(260, 370, 90, 30);
         btnReset.setFont(new Font("Arial", Font.BOLD, 12));
@@ -157,7 +145,6 @@ public class studentregistrationform extends JFrame {
         });
         panel.add(btnReset);
 
-        // Display Area
         displayArea = new JTextArea();
         displayArea.setEditable(false);
         displayArea.setFont(new Font("Arial", Font.PLAIN, 11));
@@ -167,21 +154,19 @@ public class studentregistrationform extends JFrame {
         scrollPane.setBounds(50, 420, 500, 200);
         panel.add(scrollPane);
 
-        // Add panel to frame
         add(panel);
         setVisible(true);
     }
 
     private void submitForm() {
+        String rollNo = txtRollNo.getText().trim();
         String name = txtName.getText().trim();
-        String email = txtEmail.getText().trim();
         String phone = txtPhone.getText().trim();
         String gender = "";
         String branch = (String) cbBranch.getSelectedItem();
         String semester = (String) cbSemester.getSelectedItem();
         String address = txtAddress.getText().trim();
 
-        // Determine selected gender
         if (rbMale.isSelected()) {
             gender = "Male";
         } else if (rbFemale.isSelected()) {
@@ -190,30 +175,21 @@ public class studentregistrationform extends JFrame {
             gender = "Other";
         }
 
-        // Validation
-        if (name.isEmpty() || email.isEmpty() || phone.isEmpty() || gender.isEmpty() || 
+        if (rollNo.isEmpty() || name.isEmpty() || phone.isEmpty() || gender.isEmpty() || 
             branch.equals("Select Branch") || semester.equals("Select Semester") || address.isEmpty()) {
             JOptionPane.showMessageDialog(this, "Please fill all fields!", "Warning", JOptionPane.WARNING_MESSAGE);
             return;
         }
 
-        // Phone number validation
         if (!phone.matches("\\d{10}")) {
             JOptionPane.showMessageDialog(this, "Please enter a valid 10-digit phone number!", "Error", JOptionPane.ERROR_MESSAGE);
             return;
         }
 
-        // Email validation
-        if (!email.contains("@") || !email.contains(".")) {
-            JOptionPane.showMessageDialog(this, "Please enter a valid email address!", "Error", JOptionPane.ERROR_MESSAGE);
-            return;
-        }
-
-        // Display submitted information
         String info = "========== SUBMITTED INFORMATION ==========\n\n";
-        info += "Name: " + name + "\n";
-        info += "Email: " + email + "\n";
-        info += "Phone: " + phone + "\n";
+        info += "Roll Number: " + rollNo + "\n";
+        info += "Full Name: " + name + "\n";
+        info += "Phone Number: " + phone + "\n";
         info += "Gender: " + gender + "\n";
         info += "Branch: " + branch + "\n";
         info += "Semester: " + semester + "\n";
@@ -225,8 +201,8 @@ public class studentregistrationform extends JFrame {
     }
 
     private void resetForm() {
+        txtRollNo.setText("");
         txtName.setText("");
-        txtEmail.setText("");
         txtPhone.setText("");
         txtAddress.setText("");
         genderGroup.clearSelection();
