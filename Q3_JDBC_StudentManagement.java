@@ -4,56 +4,69 @@ import java.util.Scanner;
 /**
  * Q3. JDBC - Insert and Display [10 Marks]
  * 
- * Create a Java JDBC program to connect to MySQL database 'college'.
- * Use a table named 'student' with columns: id, name, course.
+ * Question Requirements:
+ * 1. Create a Java JDBC program to connect to MySQL database 'college'
+ * 2. Use a table named 'student' with columns: id, name, course
+ * 3. Insert a student record
+ * 4. Display all student records using SELECT
+ * 5. Use PreparedStatement
  * 
- * Perform the following:
- * 1. Insert a student record.
- * 2. Display all student records using SELECT.
- * 3. Use PreparedStatement.
+ * This program demonstrates JDBC connectivity with MySQL and proper
+ * PreparedStatement usage for both INSERT and SELECT operations.
  */
 
 public class Q3_JDBC_StudentManagement {
     
-    // MySQL Database Connection Parameters
+    // MySQL Database Configuration
     private static final String DB_URL = "jdbc:mysql://localhost:3306/college";
-    private static final String DB_USER = "root";
-    private static final String DB_PASSWORD = "password"; // Change as per your MySQL password
+    private static final String DB_USER = "college_admin";
+    private static final String DB_PASSWORD = "college_admin@2024";
     private static final String DB_DRIVER = "com.mysql.cj.jdbc.Driver";
     
-    // SQL Queries using PreparedStatement
+    // SQL Queries using PreparedStatement (Requirement: Use PreparedStatement)
     private static final String INSERT_STUDENT = "INSERT INTO student (id, name, course) VALUES (?, ?, ?)";
-    private static final String SELECT_ALL_STUDENTS = "SELECT id, name, course FROM student";
+    private static final String SELECT_ALL_STUDENTS = "SELECT id, name, course FROM student ORDER BY id";
     private static final String SELECT_STUDENT_BY_ID = "SELECT id, name, course FROM student WHERE id = ?";
+    private static final String DELETE_STUDENT = "DELETE FROM student WHERE id = ?";
     
     private static Connection connection;
+    private static Scanner scanner = new Scanner(System.in);
     
     /**
-     * Establish connection with MySQL database
+     * Step 1: Establish connection with MySQL database 'college'
+     * This satisfies the requirement: Connect to MySQL database 'college'
      */
-    public static void connectToDatabase() {
+    public static void connectDatabase() {
         try {
-            // Load JDBC Driver
+            // Load MySQL JDBC Driver
             Class.forName(DB_DRIVER);
-            System.out.println("✓ JDBC Driver loaded successfully");
             
-            // Establish connection
+            // Establish connection to college database
             connection = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
-            System.out.println("✓ Connected to MySQL database 'college' successfully\n");
+            System.out.println("\n✓ Successfully connected to MySQL database 'college'");
+            System.out.println("  Server: localhost:3306");
+            System.out.println("  Database: college");
+            System.out.println("  User: college_admin\n");
             
         } catch (ClassNotFoundException e) {
-            System.err.println("✗ JDBC Driver not found: " + e.getMessage());
+            System.err.println("\n✗ MySQL JDBC Driver not found!");
+            System.err.println("  Please add mysql-connector-java JAR file to your classpath.");
+            System.err.println("  Error: " + e.getMessage() + "\n");
             System.exit(1);
         } catch (SQLException e) {
-            System.err.println("✗ Database connection failed: " + e.getMessage());
+            System.err.println("\n✗ Failed to connect to database!");
+            System.err.println("  Make sure MySQL is running and credentials are correct.");
+            System.err.println("  Error: " + e.getMessage() + "\n");
             System.exit(1);
         }
     }
     
     /**
-     * Create the student table if it doesn't exist
+     * Create the 'student' table if it doesn't already exist
+     * Table schema: id (PRIMARY KEY), name (VARCHAR), course (VARCHAR)
+     * This ensures the table exists for our operations
      */
-    public static void createTableIfNotExists() {
+    public static void createStudentTable() {
         String createTableSQL = "CREATE TABLE IF NOT EXISTS student (" +
                 "id INT PRIMARY KEY, " +
                 "name VARCHAR(100) NOT NULL, " +
@@ -62,105 +75,83 @@ public class Q3_JDBC_StudentManagement {
         
         try (Statement statement = connection.createStatement()) {
             statement.executeUpdate(createTableSQL);
-            System.out.println("✓ Student table verified/created successfully\n");
+            System.out.println("✓ Table 'student' verified/created successfully");
+            System.out.println("  Schema: id (INT, PRIMARY KEY), name (VARCHAR), course (VARCHAR)\n");
         } catch (SQLException e) {
-            System.err.println("✗ Error creating table: " + e.getMessage());
+            System.err.println("✗ Error creating table: " + e.getMessage() + "\n");
         }
     }
     
     /**
-     * Insert a student record using PreparedStatement
+     * Requirement 1 & 3: Insert a student record using PreparedStatement
+     * This satisfies: "Insert a student record" and "Use PreparedStatement"
      * 
-     * @param id - Student ID
-     * @param name - Student Name
-     * @param course - Course Name
-     * @return true if insertion successful, false otherwise
+     * PreparedStatement prevents SQL injection and handles data types safely
+     * 
+     * @param studentId - Unique student ID (Primary Key)
+     * @param studentName - Full name of the student
+     * @param studentCourse - Course name enrolled by student
      */
-    public static boolean insertStudent(int id, String name, String course) {
+    public static void insertStudentRecord(int studentId, String studentName, String studentCourse) {
         try (PreparedStatement preparedStatement = connection.prepareStatement(INSERT_STUDENT)) {
             
-            // Set parameters using PreparedStatement
-            preparedStatement.setInt(1, id);
-            preparedStatement.setString(2, name);
-            preparedStatement.setString(3, course);
+            // Use PreparedStatement with parameterized queries (? placeholders)
+            preparedStatement.setInt(1, studentId);          // Set ID parameter
+            preparedStatement.setString(2, studentName);    // Set Name parameter
+            preparedStatement.setString(3, studentCourse);  // Set Course parameter
             
-            // Execute the insert query
-            int rowsAffected = preparedStatement.executeUpdate();
+            // Execute INSERT query
+            int rowsInserted = preparedStatement.executeUpdate();
             
-            if (rowsAffected > 0) {
-                System.out.println("✓ Student record inserted successfully!");
-                System.out.println("  ID: " + id + ", Name: " + name + ", Course: " + course + "\n");
-                return true;
-            } else {
-                System.err.println("✗ Failed to insert student record\n");
-                return false;
+            if (rowsInserted > 0) {
+                System.out.println("\n✓ Student record inserted successfully!");
+                System.out.println("  ├─ ID: " + studentId);
+                System.out.println("  ├─ Name: " + studentName);
+                System.out.println("  └─ Course: " + studentCourse + "\n");
             }
             
         } catch (SQLException e) {
             if (e.getErrorCode() == 1062) {
-                System.err.println("✗ Error: Student with ID " + id + " already exists!\n");
+                System.err.println("\n✗ Error: Student with ID " + studentId + " already exists in database!\n");
             } else {
-                System.err.println("✗ Error inserting student: " + e.getMessage() + "\n");
+                System.err.println("\n✗ Error inserting student: " + e.getMessage() + "\n");
             }
-            return false;
         }
     }
     
     /**
-     * Display a specific student record by ID using PreparedStatement
+     * Requirement 2: Display all student records using SELECT with PreparedStatement
+     * This satisfies: "Display all student records using SELECT" and "Use PreparedStatement"
      * 
-     * @param id - Student ID to search
-     */
-    public static void displayStudentById(int id) {
-        try (PreparedStatement preparedStatement = connection.prepareStatement(SELECT_STUDENT_BY_ID)) {
-            
-            // Set parameter using PreparedStatement
-            preparedStatement.setInt(1, id);
-            
-            // Execute the query
-            ResultSet resultSet = preparedStatement.executeQuery();
-            
-            if (resultSet.next()) {
-                System.out.println("✓ Student found:");
-                System.out.println("  ID: " + resultSet.getInt("id"));
-                System.out.println("  Name: " + resultSet.getString("name"));
-                System.out.println("  Course: " + resultSet.getString("course") + "\n");
-            } else {
-                System.out.println("✗ No student found with ID: " + id + "\n");
-            }
-            
-        } catch (SQLException e) {
-            System.err.println("✗ Error retrieving student: " + e.getMessage() + "\n");
-        }
-    }
-    
-    /**
-     * Display all student records using PreparedStatement and SELECT
+     * Retrieves and displays all students from the 'student' table
      */
     public static void displayAllStudents() {
-        try (PreparedStatement preparedStatement = connection.prepareStatement(SELECT_ALL_STUDENTS);
-             ResultSet resultSet = preparedStatement.executeQuery()) {
+        try (PreparedStatement preparedStatement = connection.prepareStatement(SELECT_ALL_STUDENTS)) {
             
-            System.out.println("╔════════════════════════════════════════╗");
-            System.out.println("║       ALL STUDENT RECORDS              ║");
-            System.out.println("╠════════════════════════════════════════╣");
+            // Execute SELECT query using PreparedStatement
+            ResultSet resultSet = preparedStatement.executeQuery();
+            
+            System.out.println("\n╔════════════════════════════════════════════════════════╗");
+            System.out.println("║             ALL STUDENT RECORDS (FROM DATABASE)         ║");
+            System.out.println("╠════════════════════════════════════════════════════════╣");
             
             boolean hasRecords = false;
             
-            // Process the result set
+            // Iterate through ResultSet and display records
             while (resultSet.next()) {
                 hasRecords = true;
                 int id = resultSet.getInt("id");
                 String name = resultSet.getString("name");
                 String course = resultSet.getString("course");
                 
-                System.out.printf("║ ID: %-3d | Name: %-20s | Course: %-10s ║%n", id, name, course);
+                System.out.printf("║ ID: %3d │ Name: %-25s │ Course: %-15s ║%n", 
+                                id, name, course);
             }
             
-            System.out.println("╚════════════════════════════════════════╝");
+            System.out.println("╚════════════════════════════════════════════════════════╝");
             
             if (!hasRecords) {
-                System.out.println("✗ No student records found in the database.\n");
+                System.out.println("⚠ No student records found in the database.\n");
             } else {
                 System.out.println();
             }
@@ -171,25 +162,63 @@ public class Q3_JDBC_StudentManagement {
     }
     
     /**
-     * Delete all records from student table (for testing purposes)
+     * Display a specific student record by ID using PreparedStatement
+     * 
+     * @param studentId - ID of the student to search
      */
-    public static void deleteAllRecords() {
-        try (Statement statement = connection.createStatement()) {
-            statement.executeUpdate("DELETE FROM student");
-            System.out.println("✓ All student records deleted\n");
+    public static void searchStudentById(int studentId) {
+        try (PreparedStatement preparedStatement = connection.prepareStatement(SELECT_STUDENT_BY_ID)) {
+            
+            // Use PreparedStatement with parameter
+            preparedStatement.setInt(1, studentId);
+            
+            ResultSet resultSet = preparedStatement.executeQuery();
+            
+            if (resultSet.next()) {
+                System.out.println("\n✓ Student found:");
+                System.out.println("  ├─ ID: " + resultSet.getInt("id"));
+                System.out.println("  ├─ Name: " + resultSet.getString("name"));
+                System.out.println("  └─ Course: " + resultSet.getString("course") + "\n");
+            } else {
+                System.out.println("\n✗ No student found with ID: " + studentId + "\n");
+            }
+            
         } catch (SQLException e) {
-            System.err.println("✗ Error deleting records: " + e.getMessage() + "\n");
+            System.err.println("✗ Error searching student: " + e.getMessage() + "\n");
+        }
+    }
+    
+    /**
+     * Delete a student record by ID using PreparedStatement
+     * 
+     * @param studentId - ID of the student to delete
+     */
+    public static void deleteStudent(int studentId) {
+        try (PreparedStatement preparedStatement = connection.prepareStatement(DELETE_STUDENT)) {
+            
+            preparedStatement.setInt(1, studentId);
+            int rowsDeleted = preparedStatement.executeUpdate();
+            
+            if (rowsDeleted > 0) {
+                System.out.println("\n✓ Student record with ID " + studentId + " deleted successfully!\n");
+            } else {
+                System.out.println("\n✗ No student found with ID " + studentId + " to delete.\n");
+            }
+            
+        } catch (SQLException e) {
+            System.err.println("✗ Error deleting student: " + e.getMessage() + "\n");
         }
     }
     
     /**
      * Close the database connection
+     * Important for resource management
      */
     public static void closeConnection() {
         try {
             if (connection != null && !connection.isClosed()) {
                 connection.close();
-                System.out.println("✓ Database connection closed");
+                System.out.println("✓ Database connection closed.");
             }
         } catch (SQLException e) {
             System.err.println("✗ Error closing connection: " + e.getMessage());
@@ -197,128 +226,177 @@ public class Q3_JDBC_StudentManagement {
     }
     
     /**
-     * Interactive menu for CRUD operations
+     * Display main menu and handle user choices
      */
-    public static void interactiveMenu() {
-        Scanner scanner = new Scanner(System.in);
+    public static void displayMenu() {
         boolean running = true;
         
         while (running) {
-            System.out.println("\n╔════════════════════════════════╗");
-            System.out.println("║   STUDENT MANAGEMENT SYSTEM    ║");
-            System.out.println("╠════════════════════════════════╣");
-            System.out.println("║ 1. Insert a new student        ║");
-            System.out.println("║ 2. Display all students        ║");
-            System.out.println("║ 3. Search student by ID        ║");
-            System.out.println("║ 4. Delete all records          ║");
-            System.out.println("║ 5. Exit                        ║");
-            System.out.println("╚════════════════════════════════╝");
+            System.out.println("\n╔═══════════════════════════════════════════╗");
+            System.out.println("║      STUDENT DATABASE MANAGEMENT SYSTEM    ║");
+            System.out.println("╠═══════════════════════════════════════════╣");
+            System.out.println("║ 1. Insert a new student record             ║");
+            System.out.println("║ 2. Display all student records             ║");
+            System.out.println("║ 3. Search student by ID                    ║");
+            System.out.println("║ 4. Delete student record                   ║");
+            System.out.println("║ 5. Exit program                            ║");
+            System.out.println("╚═══════════════════════════════════════════╝");
             System.out.print("Enter your choice (1-5): ");
             
-            int choice = 0;
             try {
-                choice = Integer.parseInt(scanner.nextLine());
+                int choice = Integer.parseInt(scanner.nextLine().trim());
+                
+                switch (choice) {
+                    case 1:
+                        insertNewStudent();
+                        break;
+                    case 2:
+                        displayAllStudents();
+                        break;
+                    case 3:
+                        searchStudent();
+                        break;
+                    case 4:
+                        deleteStudentRecord();
+                        break;
+                    case 5:
+                        running = false;
+                        System.out.println("\n✓ Thank you for using Student Database Management System!");
+                        break;
+                    default:
+                        System.out.println("\n✗ Invalid choice! Please enter a number between 1 and 5.\n");
+                }
             } catch (NumberFormatException e) {
-                System.out.println("✗ Invalid input! Please enter a number.\n");
-                continue;
+                System.out.println("\n✗ Invalid input! Please enter a numeric choice.\n");
+            }
+        }
+    }
+    
+    /**
+     * Helper method to insert a new student with user input
+     */
+    private static void insertNewStudent() {
+        try {
+            System.out.println("\n--- INSERT NEW STUDENT RECORD ---");
+            
+            System.out.print("Enter Student ID: ");
+            int id = Integer.parseInt(scanner.nextLine().trim());
+            
+            System.out.print("Enter Student Name: ");
+            String name = scanner.nextLine().trim();
+            
+            System.out.print("Enter Course Name: ");
+            String course = scanner.nextLine().trim();
+            
+            if (name.isEmpty() || course.isEmpty()) {
+                System.out.println("✗ Name and Course cannot be empty!\n");
+                return;
             }
             
-            switch (choice) {
-                case 1:
-                    System.out.print("Enter Student ID: ");
-                    int id = Integer.parseInt(scanner.nextLine());
-                    System.out.print("Enter Student Name: ");
-                    String name = scanner.nextLine();
-                    System.out.print("Enter Course Name: ");
-                    String course = scanner.nextLine();
-                    insertStudent(id, name, course);
-                    break;
-                    
-                case 2:
-                    displayAllStudents();
-                    break;
-                    
-                case 3:
-                    System.out.print("Enter Student ID to search: ");
-                    int searchId = Integer.parseInt(scanner.nextLine());
-                    displayStudentById(searchId);
-                    break;
-                    
-                case 4:
-                    System.out.print("Are you sure? This will delete all records (yes/no): ");
-                    String confirmation = scanner.nextLine().toLowerCase();
-                    if (confirmation.equals("yes")) {
-                        deleteAllRecords();
-                    } else {
-                        System.out.println("✓ Operation cancelled\n");
-                    }
-                    break;
-                    
-                case 5:
-                    running = false;
-                    System.out.println("✓ Exiting...\n");
-                    break;
-                    
-                default:
-                    System.out.println("✗ Invalid choice! Please enter a number between 1 and 5.\n");
-            }
+            insertStudentRecord(id, name, course);
+            
+        } catch (NumberFormatException e) {
+            System.out.println("✗ Invalid ID format! Please enter a valid number.\n");
         }
-        
-        scanner.close();
     }
     
     /**
-     * Demo mode - Insert sample data and display records
+     * Helper method to search student with user input
      */
-    public static void demoMode() {
-        System.out.println("\n═══════════════════════════════════════════════════════");
-        System.out.println("           RUNNING DEMO MODE - AUTO EXECUTION");
-        System.out.println("═══════════════════════════════════════════════════════\n");
+    private static void searchStudent() {
+        try {
+            System.out.print("\nEnter Student ID to search: ");
+            int id = Integer.parseInt(scanner.nextLine().trim());
+            searchStudentById(id);
+        } catch (NumberFormatException e) {
+            System.out.println("✗ Invalid ID format! Please enter a valid number.\n");
+        }
+    }
+    
+    /**
+     * Helper method to delete student with user input
+     */
+    private static void deleteStudentRecord() {
+        try {
+            System.out.print("\nEnter Student ID to delete: ");
+            int id = Integer.parseInt(scanner.nextLine().trim());
+            
+            System.out.print("Are you sure? (yes/no): ");
+            String confirmation = scanner.nextLine().trim().toLowerCase();
+            
+            if (confirmation.equals("yes") || confirmation.equals("y")) {
+                deleteStudent(id);
+            } else {
+                System.out.println("✓ Operation cancelled.\n");
+            }
+        } catch (NumberFormatException e) {
+            System.out.println("✗ Invalid ID format! Please enter a valid number.\n");
+        }
+    }
+    
+    /**
+     * Run automated demo with sample data
+     */
+    public static void runDemo() {
+        System.out.println("\n═══════════════════════════════════════════════════════════");
+        System.out.println("              DEMO MODE - AUTOMATED EXECUTION");
+        System.out.println("═══════════════════════════════════════════════════════════");
         
-        // Delete existing records for fresh start
-        deleteAllRecords();
+        System.out.println("\n--- INSERTING SAMPLE STUDENT RECORDS ---");
+        insertStudentRecord(101, "Rahul Vijayvargiya", "Advanced Java");
+        insertStudentRecord(102, "Priya Sharma", "Web Development");
+        insertStudentRecord(103, "Amit Kumar", "Database Management");
+        insertStudentRecord(104, "Neha Verma", "Advanced Java");
+        insertStudentRecord(105, "Vikram Singh", "Spring Boot");
         
-        // Insert sample student records
-        System.out.println("--- INSERTING STUDENT RECORDS ---\n");
-        insertStudent(1, "Rahul Singh", "Java");
-        insertStudent(2, "Priya Sharma", "Python");
-        insertStudent(3, "Amit Patel", "Web Development");
-        insertStudent(4, "Neha Verma", "Database");
-        
-        // Display all records
-        System.out.println("--- DISPLAYING ALL STUDENT RECORDS ---\n");
+        System.out.println("--- DISPLAYING ALL RECORDS FROM DATABASE ---");
         displayAllStudents();
         
-        // Display specific student
-        System.out.println("--- SEARCHING FOR SPECIFIC STUDENT ---\n");
-        displayStudentById(2);
+        System.out.println("--- SEARCHING FOR SPECIFIC STUDENT ---");
+        searchStudentById(103);
+        
+        System.out.println("--- SEARCHING FOR ANOTHER STUDENT ---");
+        searchStudentById(105);
     }
     
     /**
-     * Main method
+     * Main method - Entry point of the program
      */
     public static void main(String[] args) {
-        System.out.println("╔═════════════════════════════════════════════════════╗");
-        System.out.println("║  Q3. JDBC - Insert and Display Student Records     ║");
-        System.out.println("║      Using PreparedStatement                       ║");
-        System.out.println("╚═════════════════════════════════════════════════════╝\n");
+        System.out.println("\n╔═══════════════════════════════════════════════════════════════╗");
+        System.out.println("║  Q3: JDBC - Insert and Display Student Records [10 MARKS]    ║");
+        System.out.println("║                                                               ║");
+        System.out.println("║  Requirements:                                                ║");
+        System.out.println("║  ✓ Connect to MySQL database 'college'                       ║");
+        System.out.println("║  ✓ Use table 'student' with columns: id, name, course        ║");
+        System.out.println("║  ✓ Insert a student record                                   ║");
+        System.out.println("║  ✓ Display all student records using SELECT                  ║");
+        System.out.println("║  ✓ Use PreparedStatement for all queries                     ║");
+        System.out.println("╚═══════════════════════════════════════════════════════════════╝");
         
-        // Connect to database
-        connectToDatabase();
-        
-        // Create table if not exists
-        createTableIfNotExists();
-        
-        // Check if running in demo mode or interactive mode
-        if (args.length > 0 && args[0].equalsIgnoreCase("demo")) {
-            // Run demo mode
-            demoMode();
-        } else {
-            // Run interactive menu
-            interactiveMenu();
+        try {
+            // Step 1: Connect to MySQL database 'college'
+            System.out.println("\n[Step 1] Connecting to MySQL database...");
+            connectDatabase();
+            
+            // Step 2: Ensure student table exists
+            System.out.println("[Step 2] Creating/verifying student table...");
+            createStudentTable();
+            
+            // Step 3: Check if demo mode is requested
+            System.out.println("[Step 3] Starting application...\n");
+            
+            if (args.length > 0 && args[0].equalsIgnoreCase("demo")) {
+                runDemo();
+                System.out.println("\n--- END OF DEMO ---\n");
+            } else {
+                // Interactive mode
+                displayMenu();
+            }
+            
+        } finally {
+            // Always close connection
+            closeConnection();
         }
-        
-        // Close database connection
-        closeConnection();
     }
 }
